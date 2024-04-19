@@ -23,8 +23,17 @@ const logEvents = async (message, filename) => {
 
 const logger = (req, res, next) => {
 	console.log("middleware");
+
 	logEvents(`${req.method}\t${req.headers.origin}\t${req.url}`, "server.log");
 	next();
 };
 
-module.exports = { logger, logEvents };
+const errorHandler = (err, req, res, next) => {
+	logEvents(`${err.name}: ${err.message}`, "errLog.log");
+	console.error(err.stack);
+	res
+		.status(500)
+		.send(String("Something broke!", `${err.name}: ${err.message}`));
+};
+
+module.exports = { logger, logEvents, errorHandler };

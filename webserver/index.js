@@ -1,62 +1,35 @@
 const express = require("express");
-const { logger } = require("./middleware/logger");
-const errorHandler = require("./middleware/errorHandler");
+const { logger, errorHandler } = require("./middleware/logger");
 const cors = require("cors");
+const corsOptions = require("./config/corsOptions");
 
 const app = express();
-
 const PORT = process.env.PORT || 3500;
 
-const one = (req, res, next) => {
-	console.log("one");
-	next();
-};
-const two = (req, res, next) => {
-	console.log("two");
-	next();
-};
-const three = (req, res, next) => {
-	console.log("three");
-	res.send("done");
-};
-
+// Logger middleware
 app.use(logger);
 
-const whitelist = ["http://localhost:3500", "https://www.google.com"];
-const corsOptions = {
-	origin: (origin, callback) => {
-		if (whitelist.indexOf(origin) !== -1 || !origin) {
-			callback(null, true);
-		} else {
-			callback(new Error("Not allowed by CORS"));
-		}
-	},
-	optionsSuccessStatus: 200,
-};
-
+//CORS middleware
 app.use(cors(corsOptions));
 
+// middleware to hadnle forms and JSON data
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-app.get("/", (req, res) => {
-	console.log("req: ", req.url, req.method);
-	res.send("Hello World");
-});
+// Routes for the app
+app.use("/", require("./routes/root"));
+app.use("/subdir", require("./routes/subdir"));
 
-app.get("/about", (req, res) => {
-	res.send("About us page");
-});
-
-app.get("/contact", (req, res) => {
-	res.send("Contact us page");
-});
-app.get("/chain", [one, two, three]);
+// API routes
+app.use("/login", require("./routes/api/auth"));
+app.use("/register", require("./routes/api/register"));
+app.use("/employees", require("./routes/api/employees"));
 
 // app.get("/*", (req, res) => {
 // 	res.status(404).send("404 page not found");
 // });
 
+// Handle 404
 app.all("*", (req, res) => {
 	res.status(404);
 	if (req.accepts("html")) {
@@ -68,6 +41,7 @@ app.all("*", (req, res) => {
 	}
 });
 
+// Error handler
 app.use(errorHandler);
 
 app.listen(PORT, () => {
