@@ -3,6 +3,7 @@ usersDB = require("../model/users.json");
 const fsPromises = require("fs").promises;
 const path = require("path");
 const bcrypt = require("bcrypt");
+const { ROLES_LIST } = require("../config/rolesList");
 
 const handleNewUser = async (req, res) => {
 	const { username, password } = req.body;
@@ -19,7 +20,7 @@ const handleNewUser = async (req, res) => {
 	try {
 		const hashedPassword = await bcrypt.hash(password, 10);
 		const newUser = {
-			id: users.length + 1,
+			roles: [ROLES_LIST.user],
 			username: username,
 			password: hashedPassword,
 		};
