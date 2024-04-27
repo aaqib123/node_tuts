@@ -11,6 +11,8 @@ const verifyJWT = require("./middleware/verifyJWT");
 const mongoose = require("mongoose");
 const { connectDB } = require("./config/dbConfig");
 
+//https://www.youtube.com/watch?v=f2EqECiTBL8
+
 // Connect to the database
 connectDB();
 

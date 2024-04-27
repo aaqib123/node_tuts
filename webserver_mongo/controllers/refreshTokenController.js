@@ -1,29 +1,30 @@
-let users = [];
-usersDB = require("../model/users.json");
+const Users = require("../model/User");
 const jwt = require("jsonwebtoken");
 
-const handleRefreshToken = (req, res) => {
+const handleRefreshToken = async (req, res) => {
 	const cookies = req.cookies;
-	console.log("cookies: ", cookies);
-
 	if (!cookies?.jwt) {
 		return res.sendStatus(401);
 	}
 
 	const refreshToken = cookies.jwt;
-	const user = usersDB.find((user) => user.refreshToken === refreshToken);
+	const foundUser = await Users.findOne({ refreshToken }).exec();
 
-	if (!user) {
+	if (!foundUser) {
 		return res.sendStatus(403); //forbidden
 	}
 
-	jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
-		if (err) {
-			return res.sendStatus(403);
+	jwt.verify(
+		refreshToken,
+		process.env.REFRESH_TOKEN_SECRET,
+		async (err, decodedUser) => {
+			if (err || foundUser.username !== decodedUser.username) {
+				return res.sendStatus(403);
+			}
+			const accessToken = createAccessToken(foundUser);
+			res.status(200).json({ accessToken });
 		}
-		const accessToken = createAccessToken(user);
-		res.status(200).json({ accessToken });
-	});
+	);
 };
 
 const createAccessToken = (user) => {

@@ -1,7 +1,4 @@
-let users = [];
-usersDB = require("../model/users.json");
-const fsPromises = require("fs").promises;
-const path = require("path");
+const Users = require("../model/User");
 
 const handleLogout = async (req, res) => {
 	const cookies = req.cookies;
@@ -12,24 +9,23 @@ const handleLogout = async (req, res) => {
 		return res.sendStatus(204); // no content
 	}
 
-	const user = usersDB.find((user) => user.refreshToken === refreshToken);
-	console.log("user: ", user);
+	const foundUser = await Users.findOne({ refreshToken }).exec();
+
 	// if user not found, return 204 and delete cookie
-	if (!user) {
+	if (!foundUser) {
 		res.clearCookie("jwt", { httpOnly: true });
 		return res.sendStatus(204);
-	} else {
-		// remove refresh token from user in db
-		const otherUsers = usersDB.filter((u) => u.username !== user.username);
-		console.log("otherUsers: ", otherUsers);
-		const currUser = { ...user, refreshToken: "" };
-		console.log("currUser: ", currUser);
-		await fsPromises.writeFile(
-			path.join(__dirname, "../model/users.json"),
-			JSON.stringify([...otherUsers, currUser])
-		);
+	}
+
+	try {
+		foundUser.refreshToken = "";
+		const result = await foundUser.save();
+		console.log("result: ", result);
 		res.clearCookie("jwt", { httpOnly: true });
 		res.status(200).json({ message: "User logged out" });
+	} catch (err) {
+		console.log("err: ", err);
+		res.status(500).json({ error: err.message });
 	}
 };
 

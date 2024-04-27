@@ -1,7 +1,6 @@
-const User = require("../model/User");
+const Users = require("../model/User");
 const bcrypt = require("bcrypt");
 const { ROLES_LIST } = require("../config/rolesList");
-const mongoose = require("mongoose");
 
 const handleNewUser = async (req, res) => {
 	const { username, password } = req.body;
@@ -10,7 +9,7 @@ const handleNewUser = async (req, res) => {
 			.status(400)
 			.json({ error: "Please provide username and password" });
 	}
-	const duplicateUser = await User.findOne({ username }).exec();
+	const duplicateUser = await Users.findOne({ username }).exec();
 	if (duplicateUser) {
 		return res.status(409).json({ error: "User already exists" });
 	}
@@ -18,7 +17,7 @@ const handleNewUser = async (req, res) => {
 	try {
 		const hashedPassword = await bcrypt.hash(password, 10);
 		//create and store
-		const result = await User.create(
+		const result = await Users.create(
 			{
 				username: username,
 				password: hashedPassword,
